@@ -297,26 +297,28 @@ class Yelp5Processor(DataProcessor):
 
 class ImdbProcessor(DataProcessor):
   def get_labels(self):
-    return ["neg", "pos"]
+    return ["0", "1"]
 
   def get_train_examples(self, data_dir):
-    return self._create_examples(os.path.join(data_dir, "train"))
+    """See base class."""
+    return self._create_examples(
+        self._read_tsv(os.path.join(data_dir, "train.tsv")))
 
   def get_dev_examples(self, data_dir):
-    return self._create_examples(os.path.join(data_dir, "test"))
+    """See base class."""
+    return self._create_examples(
+        self._read_tsv(os.path.join(data_dir, "dev.tsv")))
 
-  def _create_examples(self, data_dir):
+  def _create_examples(self, lines):
+    """Creates examples for the training and dev sets.
+    Changed original version to have a simpler dataset with
+    labels, text, instead of some other random information"""
     examples = []
-    for label in ["neg", "pos"]:
-      cur_dir = os.path.join(data_dir, label)
-      for filename in tf.gfile.ListDirectory(cur_dir):
-        if not filename.endswith("txt"): continue
-
-        path = os.path.join(cur_dir, filename)
-        with tf.gfile.Open(path) as f:
-          text = f.read().strip().replace("<br />", " ")
-        examples.append(InputExample(
-            guid="unused_id", text_a=text, text_b=None, label=label))
+    for (i, line) in enumerate(lines):
+      text_a = line[1]
+      label = line[0]
+      examples.append(
+          InputExample(guid=str(i), text_a=text_a, text_b=None, label=label))
     return examples
 
 
